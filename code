@@ -1,0 +1,233 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv('heart.csv')
+
+
+print("--- Số lượng giá trị thiếu ---")
+print(df.isnull().sum())
+
+print("\n--- Số dòng trùng lặp ---")
+print(df.duplicated().sum())
+
+print("\n--- Thống kê mô tả số liệu ---")
+display(df.describe())
+
+print("\n--- Kiểu dữ liệu ---")
+print(df.dtypes)
+
+
+# 2. Loại bỏ các dòng trùng lặp
+df.drop_duplicates(inplace=True)
+
+
+# 3. Lưu file dữ liệu đã làm sạch để dùng cho EDA và Machine Learning
+df.to_csv('heart_cleaned.csv', index=False)
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Thiết lập giao diện biểu đồ
+sns.set_theme(style="whitegrid")
+
+# Sử dụng file đã làm sạch (hoặc file gốc heart.csv)
+# df = pd.read_csv('heart_cleaned.csv') 
+# Nếu bạn đang dùng df đã load sẵn từ bước trước thì có thể bỏ qua dòng đọc file.
+
+# 1. Biểu đồ 1: Phân bố Cholesterol theo Độ tuổi và Giới tính
+plt.figure(figsize=(10, 6))
+sns.scatterplot(
+    data=df, 
+    x='age', 
+    y='chol', 
+    hue='sex', 
+    palette=['#e74c3c', '#3498db'], 
+    alpha=0.8, 
+    s=70
+)
+plt.title('Phân bố Cholesterol theo Độ tuổi và Giới tính', fontsize=14, fontweight='bold')
+plt.xlabel('Độ tuổi (Age)', fontsize=12)
+plt.ylabel('Cholesterol (chol)', fontsize=12)
+plt.legend(title='Giới tính', labels=['Nữ (0)', 'Nam (1)'])
+plt.show()
+
+# 2. Biểu đồ 2: Phân bố Huyết áp nghỉ (`trestbps`) theo Độ tuổi và Giới tính
+plt.figure(figsize=(10, 6))
+sns.scatterplot(
+    data=df, 
+    x='age', 
+    y='trestbps', 
+    hue='sex', 
+    palette=['#e74c3c', '#3498db'], 
+    alpha=0.8, 
+    s=70
+)
+plt.title('Phân bố Huyết áp theo Độ tuổi và Giới tính', fontsize=14, fontweight='bold')
+plt.xlabel('Độ tuổi (Age)', fontsize=12)
+plt.ylabel('Huyết áp nghỉ (trestbps)', fontsize=12)
+plt.legend(title='Giới tính', labels=['Nữ (0)', 'Nam (1)'])
+plt.show()
+
+# 3. Biểu đồ 3: Ma trận tương quan (Heatmap) giữa các chỉ số sinh tồn và bệnh lý
+plt.figure(figsize=(12, 10))
+correlation_matrix = df.corr()
+sns.heatmap(
+    correlation_matrix, 
+    annot=True, 
+    cmap='Blues', 
+    fmt=".2f", 
+    linewidths=0.5, 
+    cbar=True
+)
+plt.title('Ma trận tương quan Heatmap các chỉ số y tế', fontsize=14, fontweight='bold')
+plt.show()
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Thiết lập phong cách hiển thị
+sns.set_theme(style="whitegrid")
+
+# 1. Violin Plot: So sánh phân phối Thăm khám/Nhịp tim tối đa (thalach) giữa nhóm có bệnh và không có bệnh (target)
+plt.figure(figsize=(10, 6))
+sns.violinplot(
+    data=df, 
+    x='target', 
+    y='thalach', 
+    hue='sex', 
+    split=True, 
+    palette='muted'
+)
+plt.title('Phân bố Nhịp tim tối đa (thalach) theo Trạng thái Bệnh và Giới tính', fontsize=14, fontweight='bold')
+plt.xlabel('Trạng thái bệnh tim (0: Không, 1: Có)', fontsize=12)
+plt.ylabel('Nhịp tim tối đa đạt được (thalach)', fontsize=12)
+plt.legend(title='Giới tính', labels=['Nữ (0)', 'Nam (1)'])
+plt.show()
+
+# 2. Boxplot phân tầng: Kiểm tra giá trị ngoại lai và sự khác biệt của Cholesterol theo độ tuổi chia nhóm & target
+plt.figure(figsize=(12, 6))
+sns.boxplot(
+    data=df, 
+    x='target', 
+    y='chol', 
+    palette='Set2'
+)
+plt.title('So sánh mức độ Cholesterol giữa nhóm Bệnh và Không bệnh', fontsize=14, fontweight='bold')
+plt.xlabel('Trạng thái bệnh tim (0: Không, 1: Có)', fontsize=12)
+plt.ylabel('Cholesterol (chol)', fontsize=12)
+plt.show()
+
+# 3. Phân tích tương quan nâng cao: Lọc ra các biến có tương quan mạnh nhất với Target
+plt.figure(figsize=(8, 6))
+top_corr = df.corr()[['target']].sort_values(by='target', ascending=False)
+sns.heatmap(
+    top_corr, 
+    annot=True, 
+    cmap='vlag', 
+    vmin=-1, 
+    vmax=1, 
+    fmt=".2f"
+)
+plt.title('Mức độ tương quan của các biến đối với Biến mục tiêu (Target)', fontsize=14, fontweight='bold')
+plt.show()
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Thiết lập giao diện
+sns.set_theme(style="whitegrid")
+
+# 1. Biểu đồ Histogram kết hợp đường cong mật độ (KDE) so sánh Cholesterol và Huyết áp
+plt.figure(figsize=(12, 6))
+sns.histplot(df['chol'], color='blue', label='Cholesterol', kde=True, bins=30, alpha=0.4)
+sns.histplot(df['trestbps'], color='orange', label='Huyết áp (trestbps)', kde=True, bins=30, alpha=0.4)
+plt.title('Phổ điểm phân phối so sánh giữa Cholesterol và Huyết áp', fontsize=14, fontweight='bold')
+plt.xlabel('Giá trị chỉ số', fontsize=12)
+plt.ylabel('Tần suất (Số lượng bệnh nhân)', fontsize=12)
+plt.legend()
+plt.show()
+
+# 2. Biểu đồ Boxplot phân phối và phát hiện giá trị ngoại lai cho toàn bộ các biến số y tế
+plt.figure(figsize=(14, 6))
+sns.boxplot(data=df[['age', 'trestbps', 'chol', 'thalach', 'oldpeak']], palette='Blues')
+plt.title('Biểu đồ Boxplot phân phối và phát hiện giá trị ngoại lai các chỉ số sinh tồn', fontsize=14, fontweight='bold')
+plt.xlabel('Chỉ số y tế', fontsize=12)
+plt.ylabel('Giá trị', fontsize=12)
+plt.xticks(rotation=15)
+plt.show()
+
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 1. Đọc dữ liệu đã làm sạch
+df = pd.read_csv('heart_cleaned.csv')
+
+# 2. Chia tập dữ liệu thành Biến đặc trưng (X) và Biến mục tiêu (y - target)
+X = df.drop(columns=['target'])
+y = df['target']
+
+# 3. Chia tập dữ liệu thành tập Train (80%) và Test (20%)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+print(f"Kích thước tập huấn luyện (Train): {X_train.shape[0]} dòng")
+print(f"Kích thước tập kiểm tra (Test): {X_test.shape[0]} dòng\n")
+
+# ==========================================
+# MÔ HÌNH 1: DECISION TREE (Cây quyết định)
+# ==========================================
+dt_model = DecisionTreeClassifier(random_state=42, max_depth=5)
+dt_model.fit(X_train, y_train)
+
+y_pred_dt = dt_model.predict(X_test)
+acc_dt = accuracy_score(y_test, y_pred_dt)
+
+print("--- KẾT QUẢ MÔ HÌNH DECISION TREE ---")
+print(f"Độ chính xác (Accuracy): {acc_dt * 100:.2f}%")
+print("Báo cáo phân loại:")
+print(classification_report(y_test, y_pred_dt))
+
+# ==========================================
+# MÔ HÌNH 2: SUPPORT VECTOR MACHINE (SVM)
+# ==========================================
+svm_model = SVC(kernel='linear', random_state=42)
+svm_model.fit(X_train, y_train)
+
+y_pred_svm = svm_model.predict(X_test)
+acc_svm = accuracy_score(y_test, y_pred_svm)
+
+print("--- KẾT QUẢ MÔ HÌNH SVM ---")
+print(f"Độ chính xác (Accuracy): {acc_svm * 100:.2f}%")
+print("Báo cáo phân loại:")
+print(classification_report(y_test, y_pred_svm))
+
+# ==========================================
+# TRỰC QUAN HÓA MA TRẬN NHẦM LẪN (CONFUSION MATRIX)
+# ==========================================
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Confusion Matrix cho Decision Tree
+sns.heatmap(confusion_matrix(y_test, y_pred_dt), annot=True, fmt='d', cmap='Blues', ax=axes[0])
+axes[0].set_title(f'Decision Tree Confusion Matrix (Acc: {acc_dt:.2f})', fontweight='bold')
+axes[0].set_xlabel('Predicted Label')
+axes[0].set_ylabel('True Label')
+
+# Confusion Matrix cho SVM
+sns.heatmap(confusion_matrix(y_test, y_pred_svm), annot=True, fmt='d', cmap='Greens', ax=axes[1])
+axes[1].set_title(f'SVM Confusion Matrix (Acc: {acc_svm:.2f})', fontweight='bold')
+axes[1].set_xlabel('Predicted Label')
+axes[1].set_ylabel('True Label')
+
+plt.tight_layout()
+plt.show()
